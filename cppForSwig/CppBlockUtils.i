@@ -122,13 +122,13 @@ namespace std
 /* Convert C++(BinaryData) to Python(str) */
 %typemap(out) BinaryData
 {
-   $result = PyString_FromStringAndSize((char*)($1.getPtr()), $1.getSize());
+   $result = PyUnicode_FromStringAndSize((char*)($1.getPtr()), $1.getSize());
 }
 
 /* Convert C++(const BinaryDataRef) to Python(str) */
 %typemap(out) const BinaryDataRef
 {
-   $result = PyString_FromStringAndSize((char*)($1.getPtr()), $1.getSize());
+   $result = PyUnicode_FromStringAndSize((char*)($1.getPtr()), $1.getSize());
 }
 /******************************************************************************/
 /*
@@ -152,7 +152,7 @@ namespace std
 /* Convert C++(BinaryData const &) to Python(str) */
 %typemap(out) BinaryData const & 
 {
-   $result = PyString_FromStringAndSize((char*)($1->getPtr()), $1->getSize());
+   $result = PyUnicode_FromStringAndSize((char*)($1->getPtr()), $1->getSize());
 }
 
 /******************************************************************************/
@@ -183,7 +183,7 @@ namespace std
 	{
 		BinaryData & bdobj = (*bdIter);
 		
-		PyObject* thisPyObj = PyString_FromStringAndSize((char*)(bdobj.getPtr()), bdobj.getSize());
+		PyObject* thisPyObj = PyUnicode_FromStringAndSize((char*)(bdobj.getPtr()), bdobj.getSize());
 
 		PyList_SET_ITEM(thisList, i, thisPyObj);
 
@@ -206,7 +206,7 @@ namespace std
 	{
 		auto& bdobj = (*bdIter);
 		
-		PyObject* thisPyObj = PyString_FromStringAndSize(bdobj.getCharPtr(), bdobj.getSize());
+		PyObject* thisPyObj = PyUnicode_FromStringAndSize(bdobj.getCharPtr(), bdobj.getSize());
 
 		PyList_SET_ITEM(thisList, i, thisPyObj);
 
@@ -263,12 +263,12 @@ namespace std
 	//block hash
 	std::string hashStr = $1.thisHash_.toHexStr(true);
 	PyDict_SetItemString(thisDict, "blockHash", 
-		PyString_FromStringAndSize(hashStr.c_str(), hashStr.size()));
+		PyUnicode_FromStringAndSize(hashStr.c_str(), hashStr.size()));
 
 	//merkle
 	std::string merkleStr = $1.merkle_.toHexStr(true);
 	PyDict_SetItemString(thisDict, "merkle", 
-		PyString_FromStringAndSize(merkleStr.c_str(), merkleStr.size()));
+		PyUnicode_FromStringAndSize(merkleStr.c_str(), merkleStr.size()));
 
 	//size of block in bytes
 	PyDict_SetItemString(thisDict, "numBytes", PyInt_FromSize_t($1.numBytes_));
@@ -284,7 +284,7 @@ namespace std
 		DBTx& tx = $1.getTxByIndex(i);
 		std::string hashStr = tx.thisHash_.toHexStr(true);
 		PyList_SET_ITEM(thisList, i, 
-			PyString_FromStringAndSize(hashStr.c_str(), hashStr.size()));
+			PyUnicode_FromStringAndSize(hashStr.c_str(), hashStr.size()));
 	}
 
 	//add list to dict
@@ -304,7 +304,7 @@ namespace std
 	{
 		auto& bdobj = bdIter->first;
 		PyObject* pyStringObj = 
-		   PyString_FromStringAndSize(bdobj.getCharPtr(), bdobj.getSize());
+		   PyUnicode_FromStringAndSize(bdobj.getCharPtr(), bdobj.getSize());
 		
 		PyObject* pyIntObj =
 		   PyInt_FromLong(bdIter->second);
@@ -328,7 +328,7 @@ namespace std
 	{
 		auto& bdobj = bdIter->first;
 		PyObject* pyStringObj = 
-		   PyString_FromStringAndSize(bdobj.getCharPtr(), bdobj.getSize());
+		   PyUnicode_FromStringAndSize(bdobj.getCharPtr(), bdobj.getSize());
 		
 		auto& vectorObj = bdIter->second;
 		auto vectorIter = vectorObj.begin();
