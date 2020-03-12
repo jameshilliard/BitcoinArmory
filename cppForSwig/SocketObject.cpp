@@ -68,46 +68,47 @@ void SocketPrototype::init()
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-SOCKET SocketPrototype::openSocket(bool blocking)
+SOCKET* SocketPrototype::openSocket(bool blocking)
 {
-   SOCKET sockfd = SOCK_MAX;
+   SOCKET *sockfd = nullptr;
    try
    {
-      sockfd = socket(serv_addr_.sa_family, SOCK_STREAM, 0);
-      if (sockfd < 0)
+      sockval_ = socket(serv_addr_.sa_family, SOCK_STREAM, 0);
+      sockfd = &sockval_;
+      if (*sockfd < 0)
          throw SocketError("failed to create socket");
 
-      auto result = connect(sockfd, &serv_addr_, sizeof(serv_addr_));
+      auto result = connect(*sockfd, &serv_addr_, sizeof(serv_addr_));
       if (result < 0)
       {
          closeSocket(sockfd);
          throw SocketError("failed to connect to server");
       }
    
-      setBlocking(sockfd, blocking);
+      setBlocking(*sockfd, blocking);
+      return &sockval_;
    }
    catch (SocketError &)
    {
       closeSocket(sockfd);
-      sockfd = SOCK_MAX;
+      sockfd = nullptr;
+      return sockfd;
    }
-
-   return sockfd;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void SocketPrototype::closeSocket(SOCKET& sockfd)
+void SocketPrototype::closeSocket(SOCKET *sockfd)
 {
-   if (sockfd == SOCK_MAX)
+   if (sockfd == nullptr)
       return;
 
 #ifdef WIN32
-   closesocket(sockfd);
+   closesocket(*sockfd);
 #else
-   close(sockfd);
+   close(*sockfd);
 #endif
 
-   sockfd = SOCK_MAX;
+   sockfd = nullptr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -115,8 +116,8 @@ bool SocketPrototype::testConnection(void)
 {
    try
    {
-      auto sockfd = openSocket(true);
-      if (sockfd == SOCK_MAX)
+      SOCKET *sockfd = openSocket(true);
+      if (sockfd == nullptr)
          return false;
 
       closeSocket(sockfd);
@@ -157,21 +158,21 @@ void SocketPrototype::setBlocking(SOCKET sock, bool setblocking)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void SocketPrototype::listen(AcceptCallback callback, SOCKET& sockfd)
+void SocketPrototype::listen(AcceptCallback callback, SOCKET *sockfd)
 {
    try
    {
-      sockfd = socket(serv_addr_.sa_family, SOCK_STREAM, 0);
-      if (sockfd < 0)
+      *sockfd = socket(serv_addr_.sa_family, SOCK_STREAM, 0);
+      if (*sockfd < 0)
          throw SocketError("failed to create socket");
 
-      if (::bind(sockfd, &serv_addr_, sizeof(serv_addr_)) < 0)
+      if (::bind(*sockfd, &serv_addr_, sizeof(serv_addr_)) < 0)
       {
          closeSocket(sockfd);
          throw SocketError("failed to bind socket");
       }
 
-      if (::listen(sockfd, 10) < 0)
+      if (::listen(*sockfd, 10) < 0)
       {
          closeSocket(sockfd);
          throw SocketError("failed to listen to socket");
@@ -187,7 +188,7 @@ void SocketPrototype::listen(AcceptCallback callback, SOCKET& sockfd)
    exception_ptr exceptptr = nullptr;
 
    struct pollfd pfd;
-   pfd.fd = sockfd;
+   pfd.fd = *sockfd;
    pfd.events = POLLIN;
 
    try
@@ -236,7 +237,7 @@ void SocketPrototype::listen(AcceptCallback callback, SOCKET& sockfd)
          {
             //accept socket and trigger callback
             AcceptStruct astruct;
-            astruct.sockfd_ = accept(sockfd, &astruct.saddr_, &astruct.addrlen_);
+            astruct.sockfd_ = accept(*sockfd, &astruct.saddr_, &astruct.addrlen_);
             callback(move(astruct));
          }
       }
@@ -266,11 +267,11 @@ void PersistentSocket::socketService_nix()
    struct pollfd pfd[2];
 
    //pipe to poll
-   pfd[0].fd = pipes_[0];
+   pfd[0].fd = *pipe_0;
    pfd[0].events = POLLIN;
 
    //socket to poll
-   pfd[1].fd = sockfd_;
+   pfd[1].fd = *sockfd_;
    pfd[1].events = POLLIN;
 
    int timeout = 100;
@@ -297,7 +298,7 @@ void PersistentSocket::socketService_nix()
          }
       }
 
-      auto bytessent = send(sockfd_, 
+      auto bytessent = send(*sockfd_,
          (char*)&payload[0] + writeOffset_, 
          payload.size() - writeOffset_, 0);
 
@@ -330,7 +331,7 @@ void PersistentSocket::socketService_nix()
       if (pfd[0].revents & POLLIN)
       {
          uint8_t b;
-         auto readAmt = read(pipes_[0], (char*)&b, 1);
+         auto readAmt = read(*pipe_0, (char*)&b, 1);
 
          if (readAmt == 1)
          {
@@ -366,7 +367,7 @@ void PersistentSocket::socketService_nix()
          while (true)
          {
             readAmt = recv(
-               sockfd_, (char*)&readdata[0] + totalread, readIncrement, 0);
+               *sockfd_, (char*)&readdata[0] + totalread, readIncrement, 0);
 
             if (readAmt <= 0)
             {
@@ -619,9 +620,9 @@ void PersistentSocket::signalService(uint8_t signal)
 
    WSASetEvent(events_[0]);
 #else
-   if (pipes_[1] == SOCK_MAX)
+   if (pipe_1 == nullptr)
       return;
-   write(pipes_[1], &signal, 1);
+   write(*pipe_1, &signal, 1);
 #endif
 }
 
@@ -629,7 +630,7 @@ void PersistentSocket::signalService(uint8_t signal)
 void PersistentSocket::init()
 {
 #ifndef _WIN32
-   pipes_[0] = pipes_[1] = SOCK_MAX;
+   pipe_0 = pipe_1 = nullptr;
 #else
    events_[0] = events_[1] = nullptr;
 #endif
@@ -645,26 +646,31 @@ void PersistentSocket::initPipes()
       events_[i] = WSACreateEvent();
 #else
    pipe(pipes_);
+   int *pipe_0 = &pipes_[0];
+   int *pipe_1 = &pipes_[1];
 #endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 void PersistentSocket::cleanUpPipes()
 {
+#ifdef _WIN32
    for (unsigned i = 0; i < 2; i++)
    {
-#ifdef _WIN32
       if (events_[i] != nullptr)
       {
          WSACloseEvent(events_[i]);
          events_[i] = nullptr;
       }
-#else
-      if (pipes_[i] != SOCK_MAX)
-         close(pipes_[i]);
-      pipes_[i] = SOCK_MAX;
-#endif
    }
+#else
+   if (pipe_0 != nullptr)
+      close(*pipe_0);
+   pipe_0 = NULL;
+   if (pipe_1 != nullptr)
+      close(*pipe_1);
+   pipe_1 = NULL;
+#endif
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -685,7 +691,7 @@ int PersistentSocket::getSocketName(struct sockaddr& sa)
    unsigned int namelen = sizeof(sa);
 #endif
 
-   return getsockname(sockfd_, &sa, &namelen);
+   return getsockname(*sockfd_, &sa, &namelen);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -697,7 +703,7 @@ int PersistentSocket::getPeerName(struct sockaddr& sa)
    unsigned int namelen = sizeof(sa);
 #endif
 
-   return getpeername(sockfd_, &sa, &namelen);
+   return getpeername(*sockfd_, &sa, &namelen);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -706,7 +712,7 @@ bool PersistentSocket::connectToRemote()
    if (run_.load(memory_order_relaxed))
       return true;
 
-   if (sockfd_ == SOCK_MAX)
+   if (sockfd_ == nullptr)
    {
       if (!openSocket(false))
          return false;
@@ -800,7 +806,7 @@ vector<uint8_t> SimpleSocket::readFromSocket(void)
    size_t readIncrement = 8192;
 
    struct pollfd pfd;
-   pfd.fd = sockfd_;
+   pfd.fd = *sockfd_;
    pfd.events = POLLIN;
 
    int timeout = 100;
@@ -852,7 +858,7 @@ vector<uint8_t> SimpleSocket::readFromSocket(void)
          int readAmt;
 
          while ((readAmt =
-            recv(sockfd_, (char*)&readdata[0] + totalread, readIncrement, 0))
+            recv(*sockfd_, (char*)&readdata[0] + totalread, readIncrement, 0))
             != 0)
          {
             if (readAmt < 0)
@@ -902,15 +908,20 @@ vector<uint8_t> SimpleSocket::readFromSocket(void)
 ///////////////////////////////////////////////////////////////////////////////
 int SimpleSocket::writeToSocket(vector<uint8_t>& payload)
 {
-   return send(sockfd_, (char*)&payload[0], payload.size(), 0);
+   return send(*sockfd_, (char*)&payload[0], payload.size(), 0);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 bool SimpleSocket::connectToRemote()
 {
-   if (sockfd_ == SOCK_MAX)
-      sockfd_ = openSocket(false);
-   return sockfd_ != SOCK_MAX;
+   if (sockfd_ == nullptr) {
+      SOCKET *sockptr = openSocket(false);
+      if (sockptr != nullptr) {
+         sockval_ = *sockptr;
+         sockfd_ = &sockval_;
+      }
+   }
+   return sockfd_ != nullptr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -991,7 +1002,7 @@ void ListenServer::acceptProcess(AcceptStruct aStruct)
    auto ss = make_unique<SocketStruct>();
 
    //create BinarySocket object from sockfd
-   ss->sock_ = make_shared<SimpleSocket>(aStruct.sockfd_);
+   ss->sock_ = make_shared<SimpleSocket>(&aStruct.sockfd_);
    ss->sock_->verbose_ = false;
 
    //start read lambda thread

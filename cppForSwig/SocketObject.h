@@ -99,12 +99,13 @@ class SocketPrototype
 {
    friend class ListenServer;
 
-private: 
+private:
    bool blocking_ = true;
 
 protected:
 
 public:
+   SOCKET sockval_ = 0;
    typedef std::function<bool(const std::vector<uint8_t>&)>  SequentialReadCallback;
    typedef std::function<void(AcceptStruct)> AcceptCallback;
 
@@ -122,7 +123,7 @@ private:
 
 protected:   
    void setBlocking(SOCKET, bool);
-   void listen(AcceptCallback, SOCKET& sockfd);
+   void listen(AcceptCallback, SOCKET *sockfd);
 
    SocketPrototype(void) :
       addr_(""), port_("")
@@ -134,9 +135,9 @@ public:
 
    virtual bool testConnection(void);
    bool isBlocking(void) const { return blocking_; }
-   SOCKET openSocket(bool blocking);
+   SOCKET* openSocket(bool blocking);
    
-   static void closeSocket(SOCKET&);
+   static void closeSocket(SOCKET*);
    virtual void pushPayload(
       std::unique_ptr<Socket_WritePayload>,
       std::shared_ptr<Socket_ReadPayload>) = 0;
@@ -151,9 +152,9 @@ public:
 class SimpleSocket : public SocketPrototype
 {
 protected:
-   SOCKET sockfd_ = SOCK_MAX;
 
 private:
+   SOCKET *sockfd_ = nullptr;
    int writeToSocket(std::vector<uint8_t>&);
 
 public:
@@ -161,7 +162,7 @@ public:
       SocketPrototype(addr, port)
    {}
    
-   SimpleSocket(SOCKET sockfd) :
+   SimpleSocket(SOCKET *sockfd) :
       SocketPrototype(), sockfd_(sockfd)
    {}
 
@@ -179,7 +180,7 @@ public:
    void shutdown(void);
    void listen(AcceptCallback);
    bool connectToRemote(void);
-   SOCKET getSockFD(void) const { return sockfd_; }
+   SOCKET getSockFD(void) const { return *sockfd_; }
 
    //
    static bool checkSocket(const std::string& ip, const std::string& port);
@@ -191,7 +192,7 @@ class PersistentSocket : public SocketPrototype
    friend class ListenServer;
 
 private:
-   SOCKET sockfd_ = SOCK_MAX;
+   SOCKET *sockfd_ = nullptr;
    std::vector<std::thread> threads_;
    
    std::vector<uint8_t> writeLeftOver_;
@@ -203,6 +204,8 @@ private:
    WSAEVENT events_[2];
 #else
    SOCKET pipes_[2];
+   SOCKET *pipe_0 = nullptr;
+   SOCKET *pipe_1 = nullptr;
 #endif
 
    ArmoryThreading::BlockingQueue<std::vector<uint8_t>> readQueue_;
@@ -232,7 +235,7 @@ public:
       init();
    }
 
-   PersistentSocket(SOCKET sockfd) :
+   PersistentSocket(SOCKET *sockfd) :
       SocketPrototype(), sockfd_(sockfd)
    {
       init();
@@ -248,7 +251,7 @@ public:
    int getSocketName(struct sockaddr& sa);
    int getPeerName(struct sockaddr& sa);
    bool connectToRemote(void);
-   bool isValid(void) const { return sockfd_ != SOCK_MAX; }
+   bool isValid(void) const { return sockfd_ != nullptr; }
    bool testConnection(void) { return isValid(); }
 };
 
