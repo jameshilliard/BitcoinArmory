@@ -112,15 +112,16 @@ class CppBridge(object):
 
    #############################################################################
    def readBridgeSocket(self):
-      while self.run is True:
 
-         response = bytearray()
+      response = bytearray()
+
+      while self.run is True:
 
          #wait for data on the socket
          try:
-            response += self.clientSocket.recv(4)
+            response += self.clientSocket.recv(4096)
             if len(response) < 4:
-               break
+               continue
          except socket.error as e:
             err = e.args[0]
             if err == errno.EAGAIN or err == errno.EWOULDBLOCK:
@@ -139,7 +140,7 @@ class CppBridge(object):
          #grab full packet
          while len(response) < packetLen + 4:
             try:
-               packet = self.clientSocket.recv(packetLen)
+               packet = self.clientSocket.recv(4096)
                response += packet
                if len(response) < packetLen + 4:
                   continue
@@ -185,6 +186,9 @@ class CppBridge(object):
 
          elif replyObj != None and replyObj[0] != None:
             replyObj[0](response[8:], replyObj[1])
+
+         #clear the response buffer only once we receive a full payload
+         response = bytearray()
         
    #############################################################################
    def pushNotification(self, data):

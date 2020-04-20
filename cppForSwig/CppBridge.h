@@ -28,7 +28,7 @@ struct WritePayload_Bridge : public Socket_WritePayload
 
    size_t getSerializedSize(void) const 
    {
-      return message_->ByteSize() + 8;
+      return message_->ByteSizeLong() + 8;
    }
 };
 

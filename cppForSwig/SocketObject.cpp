@@ -258,7 +258,8 @@ void SocketPrototype::listen(AcceptCallback callback, SOCKET& sockfd)
 #ifndef _WIN32
 void PersistentSocket::socketService_nix()
 {
-   int readIncrement = 8192;
+   int readIncrement = 4096;
+   int writeIncrement = 4096;
    stringstream errorss;
 
    exception_ptr exceptptr = nullptr;
@@ -277,6 +278,7 @@ void PersistentSocket::socketService_nix()
 
    auto serviceWrite = [&](void)->void
    {
+      int writeSize;
       vector<uint8_t> payload;
 
       if (writeLeftOver_.size() != 0)
@@ -297,11 +299,17 @@ void PersistentSocket::socketService_nix()
          }
       }
 
+      if ((payload.size() - writeOffset_) < writeIncrement) {
+         writeSize = payload.size() - writeOffset_;
+      } else {
+         writeSize = writeIncrement;
+      }
+
       auto bytessent = send(sockfd_, 
          (char*)&payload[0] + writeOffset_, 
-         payload.size() - writeOffset_, 0);
+         writeSize, 0);
 
-      if (bytessent == 0)
+      if (bytessent <= 0)
          LOGERR << "failed to send data: " << payload.size() << ", offset: " << writeOffset_;
 
       writeOffset_ += bytessent;
@@ -904,7 +912,22 @@ vector<uint8_t> SimpleSocket::readFromSocket(void)
 ///////////////////////////////////////////////////////////////////////////////
 int SimpleSocket::writeToSocket(vector<uint8_t>& payload)
 {
-   return send(sockfd_, (char*)&payload[0], payload.size(), 0);
+   char *ptr = (char*)&payload[0];
+   size_t length = payload.size();
+   while (length > 0)
+   {
+      int pktsize = 4096;
+      if (length < pktsize)
+         pktsize = length;
+      int i = send(sockfd_, ptr, pktsize, 0);
+      if (i >= 1) {
+         ptr += i;
+         length -= i;
+      } else {
+         LOGWARN << "Error writing packet" << i;
+      }
+   }
+   return length;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1079,6 +1102,6 @@ void WritePayload_Protobuf::serialize(vector<uint8_t>& data)
    if (message_ == nullptr)
       return;
 
-   data.resize(message_->ByteSize());
+   data.resize(message_->ByteSizeLong());
    message_->SerializeToArray(&data[0], data.size());
 }

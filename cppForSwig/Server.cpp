@@ -547,7 +547,7 @@ void WebSocketServer::prepareWriteThread()
          bool needs_rekey = false;
          auto rightnow = chrono::system_clock::now();
 
-         if (statePtr->bip151Connection_->rekeyNeeded(msg->message_->ByteSize()))
+         if (statePtr->bip151Connection_->rekeyNeeded(msg->message_->ByteSizeLong()))
          {
             needs_rekey = true;
          }
@@ -584,9 +584,9 @@ void WebSocketServer::prepareWriteThread()
 
       //serialize arg
       vector<uint8_t> serializedData;
-      if (msg->message_->ByteSize() > 0)
+      if (msg->message_->ByteSizeLong() > 0)
       {
-         serializedData.resize(msg->message_->ByteSize());
+         serializedData.resize(msg->message_->ByteSizeLong());
          auto result = msg->message_->SerializeToArray(
             &serializedData[0], serializedData.size());
          if (!result)

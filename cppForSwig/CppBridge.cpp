@@ -2049,7 +2049,7 @@ void WritePayload_Bridge::serialize(std::vector<uint8_t>& data)
    if (message_ == nullptr)
       return;
 
-   data.resize(message_->ByteSize() + 8);
+   data.resize(message_->ByteSizeLong() + 8);
 
    //set packet size
    auto sizePtr = (uint32_t*)&data[0];
@@ -2119,7 +2119,7 @@ void BridgeCallback::run(BdmNotification notif)
             cppLedgerToProtoLedger(protoLe, *le);
          }
 
-         vector<uint8_t> payloadVec(payload.ByteSize());
+         vector<uint8_t> payloadVec(payload.ByteSizeLong());
          payload.SerializeToArray(&payloadVec[0], payloadVec.size());
 
          auto msg = make_unique<CppBridgeCallback>();
@@ -2169,7 +2169,7 @@ void BridgeCallback::run(BdmNotification notif)
          //notify node status
          BridgeNodeStatus nodeStatusMsg;
          cppNodeStatusToProtoNodeStatus(&nodeStatusMsg, *notif.nodeStatus_);
-         vector<uint8_t> serializedNodeStatus(nodeStatusMsg.ByteSize());
+         vector<uint8_t> serializedNodeStatus(nodeStatusMsg.ByteSizeLong());
          nodeStatusMsg.SerializeToArray(
             &serializedNodeStatus[0], serializedNodeStatus.size());
          
