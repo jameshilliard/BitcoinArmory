@@ -101,7 +101,9 @@ class CppBridge(object):
       self.idCounter = self.idCounter + 1
 
       #serialize payload
+      print("msg: " + repr(msg))
       payload = msg.SerializeToString()
+      print("payload: " + repr(payload))
       bp = BinaryPacker()
       bp.put(UINT32, len(payload))
       bp.put(BINARY_CHUNK, payload)

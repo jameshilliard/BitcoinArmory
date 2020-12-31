@@ -30,7 +30,7 @@ import multiprocessing
 import optparse
 import os
 import platform
-from PyQt4.QtCore import QByteArray
+from PyQt5.QtCore import QByteArray
 import random
 import signal
 import smtplib
@@ -1278,7 +1278,7 @@ LOGINFO('   Satoshi BTC directory : ' + BTC_HOME_DIR)
 LOGINFO('   Armory home dir       : ' + ARMORY_HOME_DIR)
 LOGINFO('Detected System Specs    : ')
 LOGINFO('   Total Available RAM   : %0.2f GB', SystemSpecs.Memory)
-LOGINFO('   CPU ID string         : ' + SystemSpecs.CpuStr.decode(encoding='UTF-8'))
+LOGINFO('   CPU ID string         : ' + SystemSpecs.CpuStr)
 LOGINFO('   Number of CPU cores   : %d cores', SystemSpecs.NumCores)
 LOGINFO('   System is 64-bit      : ' + str(SystemSpecs.IsX64))
 LOGINFO('   Preferred Encoding    : ' + prefEnc)
@@ -3538,6 +3538,7 @@ class SettingsFile(object):
 
    #############################################################################
    def writeSettingsFile(self, path=None):
+      print("self.settingsMap: " + repr(self.settingsMap))
       if not path:
          path = self.settingsPath
       f = open(path, 'wb')

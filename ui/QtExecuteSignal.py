@@ -8,7 +8,7 @@ from __future__ import (absolute_import, division,
 #                                                                            #
 ##############################################################################
 
-from PyQt4.QtCore import SIGNAL
+from PyQt5.QtCore import pyqtSignal
 from threading import Thread
 from time import sleep
 
@@ -20,13 +20,13 @@ class QtExecuteSignal(object):
       self.mainWnd = mainWnd
       
       self.mainWnd.connect(\
-         self.mainWnd, SIGNAL("executeSignal"), self.methodSlot)
+         self.mainWnd, pyqtSignal("executeSignal"), self.methodSlot)
       
       self.waiting = {}
       
    ###########################################################################
    def executeMethod(self, _callable, *args):
-      self.mainWnd.emit(SIGNAL("executeSignal"), _callable, *args)
+      self.mainWnd.emit(pyqtSignal("executeSignal"), _callable, *args)
       
    ###########################################################################
    def methodSlot(self, _callable, *args):

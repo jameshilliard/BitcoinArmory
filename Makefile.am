@@ -18,7 +18,7 @@ endif
 
 if BUILD_GUI
 qrc_img_resources.py: imgList.xml
-	pyrcc4 -o qrc_img_resources.py imgList.xml
+	pyrcc5 -o qrc_img_resources.py imgList.xml
 endif
 
 copy-script:

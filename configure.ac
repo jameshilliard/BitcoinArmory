@@ -96,13 +96,13 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 if test "x$build_gui" = "xyes"; then
 #check for  gui
 
-AC_CHECK_PROG([HAVE_PYRCC4], [pyrcc4], [yes], [no])
-AS_IF([test $HAVE_PYRCC4 == yes], [],
-  [AC_MSG_ERROR([missing pyrcc4 in path, make sure pyqt4-dev-tools is installed])])
+AC_CHECK_PROG([HAVE_PYRCC5], [pyrcc5], [yes], [no])
+AS_IF([test $HAVE_PYRCC5 == yes], [],
+  [AC_MSG_ERROR([missing pyrcc5 in path, make sure pyqt5-dev-tools is installed])])
 
 AC_CHECK_PROG([HAVE_LRELEASE], [lrelease], [yes], [no])
 AS_IF([test $HAVE_LRELEASE == yes], [],
-  [AC_MSG_ERROR([missing lrelease in path, make sure qt4-linguist-tools is installed])])
+  [AC_MSG_ERROR([missing lrelease in path, make sure qt5-linguist-tools is installed])])
 
 fi
 

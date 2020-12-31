@@ -8,9 +8,9 @@ from __future__ import (absolute_import, division,
 #                                                                            #
 ##############################################################################
 
-from PyQt4.QtGui import QFrame, QRadioButton, QLineEdit, QGridLayout, \
-   QLabel, QPushButton, QCheckBox, QSlider, QComboBox
-from PyQt4.QtCore import Qt, SIGNAL
+from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtWidgets import QCheckBox, QComboBox, QFrame, QGridLayout, \
+   QLabel, QLineEdit, QPushButton, QRadioButton, QSlider
 
 from qtdefines import ArmoryDialog, STYLE_RAISED, GETFONT, tightSizeNChar, \
    QLabelButton, makeHorizFrame, STYLE_NONE
@@ -66,8 +66,8 @@ class FeeSelectionDialog(ArmoryDialog):
       self.edtFeeAmt.setMinimumWidth(tightSizeNChar(self.edtFeeAmt, 6)[0])
       self.edtFeeAmt.setMaximumWidth(tightSizeNChar(self.edtFeeAmt, 12)[0])
       
-      self.connect(self.radioFlatFee, SIGNAL('clicked()'), setFlatFee())
-      self.connect(self.edtFeeAmt, SIGNAL('textChanged(QString)'), updateLbl)
+      self.connect(self.radioFlatFee, pyqtSignal('clicked()'), setFlatFee())
+      self.connect(self.edtFeeAmt, pyqtSignal('textChanged(QString)'), updateLbl)
       
       frmFlatFee = QFrame()
       frmFlatFee.setFrameStyle(STYLE_RAISED)
@@ -88,8 +88,8 @@ class FeeSelectionDialog(ArmoryDialog):
       self.edtFeeByte.setMinimumWidth(tightSizeNChar(self.edtFeeByte, 6)[0])
       self.edtFeeByte.setMaximumWidth(tightSizeNChar(self.edtFeeByte, 12)[0])
       
-      self.connect(self.radioFeeByte, SIGNAL('clicked()'), setFeeByte())
-      self.connect(self.edtFeeByte, SIGNAL('textChanged(QString)'), updateLbl)
+      self.connect(self.radioFeeByte, pyqtSignal('clicked()'), setFeeByte())
+      self.connect(self.edtFeeByte, pyqtSignal('textChanged(QString)'), updateLbl)
             
       frmFeeByte = QFrame()
       frmFeeByte.setFrameStyle(STYLE_RAISED)
@@ -108,13 +108,13 @@ class FeeSelectionDialog(ArmoryDialog):
       
       #adjust and close
       self.btnClose = QPushButton(self.tr('Close'))
-      self.connect(self.btnClose, SIGNAL('clicked()'), self.accept)
+      self.connect(self.btnClose, pyqtSignal('clicked()'), self.accept)
       
       self.checkBoxAdjust = QCheckBox(self.tr('Adjust fee/byte for privacy'))
       self.checkBoxAdjust.setChecked(\
          self.main.getSettingOrSetDefault('AdjustFee', True))
             
-      self.connect(self.checkBoxAdjust, SIGNAL('clicked()'), updateLbl)
+      self.connect(self.checkBoxAdjust, pyqtSignal('clicked()'), updateLbl)
       
       frmClose = makeHorizFrame(\
          [self.checkBoxAdjust, 'Stretch', self.btnClose], STYLE_NONE)
@@ -298,11 +298,11 @@ class FeeSelectionDialog(ArmoryDialog):
 
       self.lblSlider.setText(getSliderLabelTxt())
      
-      self.connect(self.radioAutoFeeByte, SIGNAL('clicked()'), setAutoFeeByte())
+      self.connect(self.radioAutoFeeByte, pyqtSignal('clicked()'), setAutoFeeByte())
       self.sliderAutoFeeByte.valueChanged.connect(updateAutoFeeByte)
       self.sliderAutoFeeByte.setEnabled(False)
 
-      self.connect(self.comboStrat, SIGNAL('currentIndexChanged(int)'), stratComboChange)
+      self.connect(self.comboStrat, pyqtSignal('currentIndexChanged(int)'), stratComboChange)
             
       frmAutoFeeByte = QFrame()
       frmAutoFeeByte.setFrameStyle(STYLE_RAISED)

@@ -17,8 +17,9 @@ import sys
 import time
 from zipfile import ZipFile, ZIP_DEFLATED
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtWidgets import QGraphicsItem, QGraphicsTextItem, QGraphicsView,\
+   QLineEdit, QPushButton, QRadioButton, QSplashScreen
 
 from armoryengine.ALL import *
 from armorycolors import Colors, htmlColor
@@ -14093,7 +14094,7 @@ class DlgRegAndTest(ArmoryDialog):
 
 #############################################################################
 class URLHandler(QObject):
-   @pyqtSignature("QUrl")
+   @pyqtSlot("QUrl")
    def handleURL(self, link):
       DlgBrowserWarn(link.toString()).exec_()
 

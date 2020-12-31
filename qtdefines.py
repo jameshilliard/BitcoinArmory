@@ -14,8 +14,10 @@ from __future__ import (absolute_import, division,
 import struct
 from tempfile import mkstemp
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QDialog, QFrame, QLabel, QStyledItemDelegate,\
+   QTableView, QWidget
 import urllib
 
 from armorycolors import Colors, htmlColor

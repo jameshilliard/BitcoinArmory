@@ -13,7 +13,7 @@
 ##############################################################################
 from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
-import sip
+from PyQt5 import sip
 sip.setapi('QString', 2)
 sip.setapi('QVariant', 1)
 import gettext
@@ -40,8 +40,9 @@ import traceback
 import glob
 
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QApplication, QMainWindow
 import psutil
 
 from armorycolors import Colors, htmlColor, QAPP
@@ -101,7 +102,7 @@ QDesktopServices.setUrlHandler("https", handler.handleURL)
 
 # Load our framework with OS X-specific code.
 if OS_MACOSX:
-   import ArmoryMac
+   #import ArmoryMac
 
 # HACK ALERT: Qt has a bug in OS X where the system font settings will override
 # the app's settings when a window is activated (e.g., Armory starts, the user
@@ -162,8 +163,8 @@ class ArmoryMainWindow(QMainWindow):
       else:
          if USE_TESTNET or USE_REGTEST:
             self.iconfile = './img/armory_icon_green_fullres.png'
-         ArmoryMac.MacDockIconHandler.instance().setMainWindow(self)
-         ArmoryMac.MacDockIconHandler.instance().setIcon(QIcon(self.iconfile))
+         #ArmoryMac.MacDockIconHandler.instance().setMainWindow(self)
+         #ArmoryMac.MacDockIconHandler.instance().setIcon(QIcon(self.iconfile))
       self.lblLogoIcon.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
 
       self.netMode     = NETWORKMODE.Offline
@@ -721,8 +722,8 @@ class ArmoryMainWindow(QMainWindow):
       if CLI_ARGS:
          self.signalExecution.callLater(1, self.uriLinkClicked, CLI_ARGS[0])
 
-      if OS_MACOSX:
-         self.macNotifHdlr = ArmoryMac.MacNotificationHandler()
+      #if OS_MACOSX:
+         #self.macNotifHdlr = ArmoryMac.MacNotificationHandler()
 
       # Now that construction of the UI is done
       # Check for warnings to be displayed

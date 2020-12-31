@@ -690,8 +690,6 @@ vector<string> BlockDataManagerConfig::tokenizeLine(
             auto y = i;
             while (i < line.size() -1)
             {
-               if (line.c_str()[i] == ' ')
-                  break;
                ++i;
             }
 

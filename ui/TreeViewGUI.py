@@ -8,8 +8,8 @@ from __future__ import (absolute_import, division,
 #                                                                            #
 ##############################################################################
 
-from PyQt4.QtCore import *
-from PyQt4.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 
 from armoryengine.ArmoryUtils import coin2str, hash160_to_addrStr,\
    addrStr_to_hash160
